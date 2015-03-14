@@ -4,7 +4,6 @@ import (
 	"github.com/customerio/gospec"
 	. "github.com/customerio/gospec"
 	"github.com/garyburd/redigo/redis"
-	"time"
 )
 
 func ScheduledSpec(c gospec.Context) {
@@ -17,7 +16,7 @@ func ScheduledSpec(c gospec.Context) {
 		conn := Config.Pool.Get()
 		defer conn.Close()
 
-		now := time.Now().Unix()
+		now := nowNano()
 
 		message1, _ := NewMsg("{\"queue\":\"default\",\"foo\":\"bar1\"}")
 		message2, _ := NewMsg("{\"queue\":\"myqueue\",\"foo\":\"bar2\"}")

@@ -1,7 +1,6 @@
 package workers
 
 import (
-	"fmt"
 	"math"
 	"math/rand"
 	"time"
@@ -11,6 +10,8 @@ const (
 	DEFAULT_MAX_RETRY = 25
 	LAYOUT            = "2006-01-02 15:04:05 MST"
 )
+
+var DelayFunction func(int) time.Duration = exponentialDelay
 
 type MiddlewareRetry struct{}
 
@@ -22,13 +23,13 @@ func (r *MiddlewareRetry) Call(queue string, message *Msg, next func() bool) (ac
 
 			if retry(message) {
 				message.Set("queue", queue)
-				message.Set("error_message", fmt.Sprintf("%v", e))
+				message.Set("error_message", e)
 				retryCount := incrementRetry(message)
 
 				_, err := conn.Do(
 					"zadd",
 					Config.Namespace+RETRY_KEY,
-					time.Now().Unix()+int64(secondsToDelay(retryCount)),
+					ToNano(time.Now().Add(DelayFunction(retryCount))),
 					message.ToJson(),
 				)
 
@@ -80,7 +81,8 @@ func incrementRetry(message *Msg) (retryCount int) {
 	return
 }
 
-func secondsToDelay(count int) int {
+func exponentialDelay(count int) time.Duration {
 	power := math.Pow(float64(count), 4)
-	return int(power) + 15 + (rand.Intn(30) * (count + 1))
+	seconds := int(power) + 15 + (rand.Intn(30) * (count + 1))
+	return time.Duration(seconds) * time.Second
 }

@@ -7,8 +7,8 @@ import (
 	"github.com/garyburd/redigo/redis"
 )
 
-const (
-	POLL_INTERVAL = 15
+var (
+	POLL_INTERVAL time.Duration = 15
 )
 
 type scheduled struct {
@@ -32,7 +32,7 @@ func (s *scheduled) poll(continuing bool) {
 
 	conn := Config.Pool.Get()
 
-	now := time.Now().Unix()
+	now := nowNano()
 
 	for _, key := range s.keys {
 		key = Config.Namespace + key
