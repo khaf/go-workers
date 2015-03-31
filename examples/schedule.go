@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/jrallison/go-workers"
+	"github.com/khaf/go-workers"
 )
 
 func main() {
