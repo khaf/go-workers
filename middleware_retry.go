@@ -7,7 +7,7 @@ import (
 )
 
 const (
-	DEFAULT_MAX_RETRY = 25
+	DEFAULT_MAX_RETRY = 250
 	LAYOUT            = "2006-01-02 15:04:05 MST"
 )
 
@@ -52,16 +52,19 @@ func (r *MiddlewareRetry) Call(queue string, message *Msg, next func() bool) (ac
 
 func retry(message *Msg) bool {
 	retry := false
+	setRetry := false
 	max := DEFAULT_MAX_RETRY
+
+	count, _ := message.Get("retry_count").Int()
 
 	if param, err := message.Get("retry").Bool(); err == nil {
 		retry = param
+		message.Set("retry", count)
+		message.Set("retry_count", 0)
 	} else if param, err := message.Get("retry").Int(); err == nil {
 		max = param
 		retry = true
 	}
-
-	count, _ := message.Get("retry_count").Int()
 
 	return retry && count < max
 }
