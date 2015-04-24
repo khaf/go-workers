@@ -16,13 +16,15 @@ func (l *MiddlewareLogging) Call(queue string, message *Msg, next func() bool) (
 	Logger.Println(prefix, "args: ", message.Args().ToJson())
 
 	defer func() {
+		// do not log retry panics. They are raised deliberately
 		if e := recover(); e != nil {
-			Logger.Println(prefix, "fail:", time.Since(start))
+			if _, ok := e.(ErrDoRetry); !ok {
+				Logger.Println(prefix, "fail:", time.Since(start))
 
-			buf := make([]byte, 4096)
-			buf = buf[:runtime.Stack(buf, false)]
-			Logger.Printf("%s error: %v\n%s", prefix, e, buf)
-
+				buf := make([]byte, 4096)
+				buf = buf[:runtime.Stack(buf, false)]
+				Logger.Printf("%s error: %v\n%s", prefix, e, buf)
+			}
 			panic(e)
 		}
 	}()

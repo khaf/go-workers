@@ -1,10 +1,19 @@
 package workers
 
 import (
+	"errors"
 	"math"
 	"math/rand"
 	"time"
 )
+
+// ErrDoRetry will cause a retry, butwill recover gracefully without causing a panic
+type ErrDoRetry error
+
+// RetryPanic will cause a retry, butwill recover gracefully without causing a panic
+func RetryPanic() {
+	panic(ErrDoRetry(errors.New("")))
+}
 
 const (
 	DEFAULT_MAX_RETRY = 250
@@ -52,7 +61,6 @@ func (r *MiddlewareRetry) Call(queue string, message *Msg, next func() bool) (ac
 
 func retry(message *Msg) bool {
 	retry := false
-	setRetry := false
 	max := DEFAULT_MAX_RETRY
 
 	count, _ := message.Get("retry_count").Int()
