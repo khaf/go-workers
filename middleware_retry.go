@@ -66,9 +66,13 @@ func retry(message *Msg) bool {
 	count, _ := message.Get("retry_count").Int()
 
 	if param, err := message.Get("retry").Bool(); err == nil {
+		// we should get here only once
 		retry = param
 		message.Set("retry", count)
 		message.Set("retry_count", 0)
+
+		// set count to 0, since this is the first retry
+		count = 0
 	} else if param, err := message.Get("retry").Int(); err == nil {
 		max = param
 		retry = true
